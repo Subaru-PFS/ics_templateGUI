@@ -81,9 +81,10 @@ class Example(QWidget):
         [actor, cmdStr] = self.commandLine.text().split(' ', 1)
 
         self.logArea.newLine('cmdIn=%s %s' % (actor, cmdStr))
-        self.actor.threadCmd(**dict(actor=actor,
-                                    cmdStr=cmdStr,
-                                    callFunc=self.returnFunc))
+        self.actor.cmdr.bgCall(**dict(actor=actor,
+                                      cmdStr=cmdStr,
+                                      timeLim=600,
+                                      callFunc=self.returnFunc))
 
     def returnFunc(self, cmdVar):
         self.logArea.newLine('cmdOut=%s' % cmdVar.lastReply.canonical())

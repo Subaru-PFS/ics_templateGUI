@@ -24,9 +24,6 @@ class OurActor(actorcore.ICC.ICC):
     def disconnectActor(self):
         self.shuttingDown = True
 
-    def threadCmd(self, **kwargs):
-        self.cmdr.callBg(**kwargs)
-
 
 def connectActor(modelNames):
     theActor = OurActor('templategui',

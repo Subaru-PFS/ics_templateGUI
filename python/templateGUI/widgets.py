@@ -1,6 +1,7 @@
 __author__ = 'alefur'
-from PyQt5.QtWidgets import QGridLayout, QGroupBox, QLabel
 from functools import partial
+
+from PyQt5.QtWidgets import QGridLayout, QGroupBox, QLabel
 
 
 class ValueGB(QGroupBox):

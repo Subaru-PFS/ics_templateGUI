@@ -1,10 +1,13 @@
 __author__ = 'alefur'
 
-from PyQt5.QtWidgets import QGridLayout, QWidget, QGroupBox, QLineEdit, QPushButton, QLabel, QPlainTextEdit
-from PyQt5.QtGui import QFont, QTextCursor
 from datetime import datetime as dt
-from widgets import ValueGB
 from functools import partial
+
+from PyQt5.QtWidgets import QGridLayout, QWidget, QGroupBox, QLineEdit, QPushButton, QPlainTextEdit
+from PyQt5.QtGui import QFont, QTextCursor
+
+from widgets import ValueGB
+
 
 class LogArea(QPlainTextEdit):
     def __init__(self):
@@ -18,10 +21,12 @@ class LogArea(QPlainTextEdit):
 
     def newLine(self, line):
         self.insertPlainText("\n%s  %s" % (dt.now().strftime("%H:%M:%S.%f"), line))
-        #self.moveCursor(QTextCursor.End)
-        #self.ensureCursorVisible()
+        self.moveCursor(QTextCursor.End)
+        self.ensureCursorVisible()
+
     def trick(self, qlineedit):
         self.newLine(qlineedit.text())
+
 
 class Device(QGroupBox):
     def __init__(self, title):
@@ -78,6 +83,5 @@ class Example(QWidget):
     def sendCommand(self):
         [actor, cmdStr] = self.commandLine.text().split(' ', 1)
 
-        self.logArea.newLine('cmdIn=%s %s'%(actor, cmdStr))
+        self.logArea.newLine('cmdIn=%s %s' % (actor, cmdStr))
         self.actor.threadCmd(**dict(actor=actor, cmdStr=cmdStr))
-

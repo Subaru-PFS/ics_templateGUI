@@ -1,7 +1,6 @@
 __author__ = 'alefur'
 
 from datetime import datetime as dt
-from functools import partial
 
 from PyQt5.QtWidgets import QGridLayout, QWidget, QGroupBox, QLineEdit, QPushButton, QPlainTextEdit
 from PyQt5.QtGui import QFont, QTextCursor
@@ -68,8 +67,6 @@ class Example(QWidget):
         self.commandButton.clicked.connect(self.sendCommand)
 
         self.logArea = LogArea()
-        self.actor.dummyLab = QLineEdit()
-        self.actor.dummyLab.textChanged.connect(partial(self.logArea.trick, self.actor.dummyLab))
 
         self.mainLayout.addWidget(self.commandLine, 4, 0, 1, 4)
         self.mainLayout.addWidget(self.commandButton, 4, 4, 1, 1)
@@ -84,4 +81,9 @@ class Example(QWidget):
         [actor, cmdStr] = self.commandLine.text().split(' ', 1)
 
         self.logArea.newLine('cmdIn=%s %s' % (actor, cmdStr))
-        self.actor.threadCmd(**dict(actor=actor, cmdStr=cmdStr))
+        self.actor.threadCmd(**dict(actor=actor,
+                                    cmdStr=cmdStr,
+                                    callFunc=self.returnFunc))
+
+    def returnFunc(self, cmdVar):
+        self.logArea.newLine('cmdOut=%s' % cmdVar.lastReply.canonical())

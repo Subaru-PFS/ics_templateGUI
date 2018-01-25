@@ -1,12 +1,13 @@
 __author__ = 'alefur'
 
 from datetime import datetime as dt
-
-from PyQt5.QtWidgets import QGridLayout, QWidget, QGroupBox, QLineEdit, QPushButton, QPlainTextEdit
+import numpy as np
+from PyQt5.QtWidgets import QGridLayout, QWidget, QGroupBox, QLineEdit, QPushButton, QPlainTextEdit, QVBoxLayout, QHBoxLayout
 from PyQt5.QtGui import QFont, QTextCursor
 
 from widgets import ValueGB
 from functools import partial
+from graph import Graph
 
 class LogArea(QPlainTextEdit):
     def __init__(self):
@@ -38,29 +39,28 @@ class Example(QWidget):
     def __init__(self, mainTree):
         QWidget.__init__(self)
         self.mainTree = mainTree
-        self.mainLayout = QGridLayout()
+        self.mainLayout = QVBoxLayout()
+        self.windowLayout = QHBoxLayout()
+        self.labelLayout = QGridLayout()
 
-        self.mainLayout.addWidget(ValueGB('Enabled ', self.actor.models['xcu_r0'], 'ionpump1', 0, '{:g}'), 0, 0)
-        self.mainLayout.addWidget(ValueGB('Voltage(V)', self.actor.models['xcu_r0'], 'ionpump1', 1, '{:g}'), 0, 1)
-        self.mainLayout.addWidget(ValueGB('Current(A)', self.actor.models['xcu_r0'], 'ionpump1', 2, '{:g}'), 0, 2)
-        self.mainLayout.addWidget(ValueGB('Temperature(K)', self.actor.models['xcu_r0'], 'ionpump1', 3, '{:g}'), 0, 3)
-        self.mainLayout.addWidget(ValueGB('Pressure(Torr)', self.actor.models['xcu_r0'], 'ionpump1', 4, '{:g}'), 0, 4)
+        self.labelLayout.addWidget(ValueGB('Enabled ', self.actor.models['xcu_r0'], 'ionpump1', 0, '{:g}'), 0, 0)
+        self.labelLayout.addWidget(ValueGB('Voltage(V)', self.actor.models['xcu_r0'], 'ionpump1', 1, '{:g}'), 0, 1)
+        self.labelLayout.addWidget(ValueGB('Current(A)', self.actor.models['xcu_r0'], 'ionpump1', 2, '{:g}'), 0, 2)
+        self.labelLayout.addWidget(ValueGB('Temperature(K)', self.actor.models['xcu_r0'], 'ionpump1', 3, '{:g}'), 0, 3)
+        self.labelLayout.addWidget(ValueGB('Pressure(Torr)', self.actor.models['xcu_r0'], 'ionpump1', 4, '{:g}'), 0, 4)
 
-        self.mainLayout.addWidget(ValueGB('Enabled ', self.actor.models['xcu_r0'], 'ionpump2', 0, '{:g}'), 1, 0)
-        self.mainLayout.addWidget(ValueGB('Voltage(V)', self.actor.models['xcu_r0'], 'ionpump2', 1, '{:g}'), 1, 1)
-        self.mainLayout.addWidget(ValueGB('Current(A)', self.actor.models['xcu_r0'], 'ionpump2', 2, '{:g}'), 1, 2)
-        self.mainLayout.addWidget(ValueGB('Temperature(K)', self.actor.models['xcu_r0'], 'ionpump2', 3, '{:g}'), 1, 3)
-        self.mainLayout.addWidget(ValueGB('Pressure(Torr)', self.actor.models['xcu_r0'], 'ionpump2', 4, '{:g}'), 1, 4)
+        self.labelLayout.addWidget(ValueGB('Enabled ', self.actor.models['xcu_r0'], 'ionpump2', 0, '{:g}'), 1, 0)
+        self.labelLayout.addWidget(ValueGB('Voltage(V)', self.actor.models['xcu_r0'], 'ionpump2', 1, '{:g}'), 1, 1)
+        self.labelLayout.addWidget(ValueGB('Current(A)', self.actor.models['xcu_r0'], 'ionpump2', 2, '{:g}'), 1, 2)
+        self.labelLayout.addWidget(ValueGB('Temperature(K)', self.actor.models['xcu_r0'], 'ionpump2', 3, '{:g}'), 1, 3)
+        self.labelLayout.addWidget(ValueGB('Pressure(Torr)', self.actor.models['xcu_r0'], 'ionpump2', 4, '{:g}'), 1, 4)
 
-        self.mainLayout.addWidget(ValueGB('Cooler_Setpoint(K)', self.actor.models['xcu_r0'], 'coolerTemps', 0, '{:g}'),
-                                  2, 0)
-        self.mainLayout.addWidget(ValueGB('Cooler_Reject(C)', self.actor.models['xcu_r0'], 'coolerTemps', 1, '{:g}'), 2,
-                                  1)
-        self.mainLayout.addWidget(ValueGB('Cooler_Tip(K)', self.actor.models['xcu_r0'], 'coolerTemps', 2, '{:g}'), 2, 2)
-        self.mainLayout.addWidget(ValueGB('Cooler_Power(W)', self.actor.models['xcu_r0'], 'coolerTemps', 3, '{:g}'), 2,
-                                  3)
+        self.labelLayout.addWidget(ValueGB('Cooler_Setpoint(K)', self.actor.models['xcu_r0'], 'coolerTemps', 0, '{:g}'), 2, 0)
+        self.labelLayout.addWidget(ValueGB('Cooler_Reject(C)', self.actor.models['xcu_r0'], 'coolerTemps', 1, '{:g}'), 2,  1)
+        self.labelLayout.addWidget(ValueGB('Cooler_Tip(K)', self.actor.models['xcu_r0'], 'coolerTemps', 2, '{:g}'), 2, 2)
+        self.labelLayout.addWidget(ValueGB('Cooler_Power(W)', self.actor.models['xcu_r0'], 'coolerTemps', 3, '{:g}'), 2,  3)
 
-        self.mainLayout.addWidget(ValueGB('Shutters', self.actor.models['enu'], 'shutters', 2, '{:s}'), 3, 0)
+        self.labelLayout.addWidget(ValueGB('Shutters', self.actor.models['enu'], 'shutters', 2, '{:s}'), 3, 0)
 
         self.commandLine = QLineEdit()
         self.commandButton = QPushButton('Send Command')
@@ -68,13 +68,20 @@ class Example(QWidget):
 
         self.logArea = LogArea()
 
-        self.mainLayout.addWidget(self.commandLine, 4, 0, 1, 4)
-        self.mainLayout.addWidget(self.commandButton, 4, 4, 1, 1)
+        self.labelLayout.addWidget(self.commandLine, 4, 0, 1, 4)
+        self.labelLayout.addWidget(self.commandButton, 4, 4, 1, 1)
 
-        self.mainLayout.addWidget(self.createButton(title='POWER ON', cmdStr='mcs power on'), 5, 0, 1, 1)
-        self.mainLayout.addWidget(self.createButton(title='POWER OFF', cmdStr='mcs power off'), 5, 1, 1, 1)
+        self.labelLayout.addWidget(self.createButton(title='POWER ON', cmdStr='mcs power on'), 5, 0, 1, 1)
+        self.labelLayout.addWidget(self.createButton(title='POWER OFF', cmdStr='mcs power off'), 5, 1, 1, 1)
 
-        self.mainLayout.addWidget(self.logArea, 6, 0, 10, 5)
+
+        self.newGraph = Graph(parent=self, label='Cooler_Power')
+        self.actor.models['xcu_r0'].keyVarDict["coolerTemps"].addCallback(partial(self.newGraph.newValue, 3))
+
+        self.windowLayout.addLayout(self.labelLayout)
+        self.windowLayout.addWidget(self.newGraph)
+        self.mainLayout.addLayout(self.windowLayout)
+        self.mainLayout.addWidget(self.logArea)
         self.setLayout(self.mainLayout)
 
     @property

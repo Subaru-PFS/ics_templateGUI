@@ -24,9 +24,7 @@ class ValueGB(QGroupBox):
 
     def updateVals(self, label, ind, fmt, keyvar):
         values = keyvar.getValue(doRaise=False)
-        values = (values,) if not isinstance(values, tuple) else values
-
-        value = values[ind]
+        value = (values,) if not isinstance(values, tuple) else values[ind]
 
         strValue = 'nan' if value is None else fmt.format(value)
         label.setText(strValue)

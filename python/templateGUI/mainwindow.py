@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QGridLayout, QWidget, QGroupBox, QLineEdit, QPushBut
 from PyQt5.QtGui import QFont, QTextCursor
 
 from widgets import ValueGB
-
+from functools import partial
 
 class LogArea(QPlainTextEdit):
     def __init__(self):
@@ -64,27 +64,42 @@ class Example(QWidget):
 
         self.commandLine = QLineEdit()
         self.commandButton = QPushButton('Send Command')
-        self.commandButton.clicked.connect(self.sendCommand)
+        self.commandButton.clicked.connect(self.sendCmdLine)
 
         self.logArea = LogArea()
 
         self.mainLayout.addWidget(self.commandLine, 4, 0, 1, 4)
         self.mainLayout.addWidget(self.commandButton, 4, 4, 1, 1)
-        self.mainLayout.addWidget(self.logArea, 5, 0, 10, 5)
+
+        self.mainLayout.addWidget(self.createButton(title='POWER ON', cmdStr='mcs power on'), 5, 0, 1, 1)
+        self.mainLayout.addWidget(self.createButton(title='POWER OFF', cmdStr='mcs power off'), 5, 1, 1, 1)
+
+        self.mainLayout.addWidget(self.logArea, 6, 0, 10, 5)
         self.setLayout(self.mainLayout)
 
     @property
     def actor(self):
         return self.mainTree.actor
 
-    def sendCommand(self):
-        [actor, cmdStr] = self.commandLine.text().split(' ', 1)
+    def createButton(self, title, cmdStr):
+        button = QPushButton(title)
+        button.clicked.connect(partial(self.sendCommand, cmdStr))
+        return button
 
+    def sendCmdLine(self):
+         self.sendCommand(self.commandLine.text())
+
+    def sendCommand(self, fullCmd):
+        import opscore.actor.keyvar as keyvar
+        [actor, cmdStr] =fullCmd.split(' ', 1)
         self.logArea.newLine('cmdIn=%s %s' % (actor, cmdStr))
         self.actor.cmdr.bgCall(**dict(actor=actor,
                                       cmdStr=cmdStr,
                                       timeLim=600,
-                                      callFunc=self.returnFunc))
+                                      callFunc=self.returnFunc,
+                                      callCodes=keyvar.AllCodes))
 
     def returnFunc(self, cmdVar):
-        self.logArea.newLine('cmdOut=%s' % cmdVar.lastReply.canonical())
+        self.logArea.newLine('cmdOut=%s' % cmdVar.replyList[0].canonical())
+        for i in range(len(cmdVar.replyList)-1):
+            self.logArea.newLine(cmdVar.replyList[i+1].canonical())

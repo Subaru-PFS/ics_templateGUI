@@ -1,13 +1,16 @@
 __author__ = 'alefur'
 
 from datetime import datetime as dt
-import numpy as np
-from PyQt5.QtWidgets import QGridLayout, QWidget, QGroupBox, QLineEdit, QPushButton, QPlainTextEdit, QVBoxLayout, QHBoxLayout
+from functools import partial
+
+from PyQt5.QtWidgets import QGridLayout, QWidget, QGroupBox, QLineEdit, QPushButton, QPlainTextEdit, QVBoxLayout, \
+    QHBoxLayout
+
 from PyQt5.QtGui import QFont, QTextCursor
 
 from widgets import ValueGB
-from functools import partial
 from graph import Graph
+
 
 class LogArea(QPlainTextEdit):
     def __init__(self):
@@ -55,10 +58,14 @@ class Example(QWidget):
         self.labelLayout.addWidget(ValueGB('Temperature(K)', self.actor.models['xcu_r0'], 'ionpump2', 3, '{:g}'), 1, 3)
         self.labelLayout.addWidget(ValueGB('Pressure(Torr)', self.actor.models['xcu_r0'], 'ionpump2', 4, '{:g}'), 1, 4)
 
-        self.labelLayout.addWidget(ValueGB('Cooler_Setpoint(K)', self.actor.models['xcu_r0'], 'coolerTemps', 0, '{:g}'), 2, 0)
-        self.labelLayout.addWidget(ValueGB('Cooler_Reject(C)', self.actor.models['xcu_r0'], 'coolerTemps', 1, '{:g}'), 2,  1)
-        self.labelLayout.addWidget(ValueGB('Cooler_Tip(K)', self.actor.models['xcu_r0'], 'coolerTemps', 2, '{:g}'), 2, 2)
-        self.labelLayout.addWidget(ValueGB('Cooler_Power(W)', self.actor.models['xcu_r0'], 'coolerTemps', 3, '{:g}'), 2,  3)
+        self.labelLayout.addWidget(ValueGB('Cooler_Setpoint(K)', self.actor.models['xcu_r0'], 'coolerTemps', 0, '{:g}'),
+                                   2, 0)
+        self.labelLayout.addWidget(ValueGB('Cooler_Reject(C)', self.actor.models['xcu_r0'], 'coolerTemps', 1, '{:g}'),
+                                   2, 1)
+        self.labelLayout.addWidget(ValueGB('Cooler_Tip(K)', self.actor.models['xcu_r0'], 'coolerTemps', 2, '{:g}'), 2,
+                                   2)
+        self.labelLayout.addWidget(ValueGB('Cooler_Power(W)', self.actor.models['xcu_r0'], 'coolerTemps', 3, '{:g}'), 2,
+                                   3)
 
         self.labelLayout.addWidget(ValueGB('Shutters', self.actor.models['enu'], 'shutters', 2, '{:s}'), 3, 0)
 
@@ -74,9 +81,11 @@ class Example(QWidget):
         self.labelLayout.addWidget(self.createButton(title='POWER ON', cmdStr='mcs power on'), 5, 0, 1, 1)
         self.labelLayout.addWidget(self.createButton(title='POWER OFF', cmdStr='mcs power off'), 5, 1, 1, 1)
 
+        self.newGraph = Graph(parent=self, labels=['Cooler_Setpoint', 'Cooler_Reject', 'Cooler_Tip', 'Cooler_Power'])
+        self.newGraph.plotActivated[0] = True
+        self.newGraph.plotActivated[2] = True
 
-        self.newGraph = Graph(parent=self, label='Cooler_Power')
-        self.actor.models['xcu_r0'].keyVarDict["coolerTemps"].addCallback(partial(self.newGraph.newValue, 3))
+        self.actor.models['xcu_r0'].keyVarDict["coolerTemps"].addCallback(partial(self.newGraph.newValue))
 
         self.windowLayout.addLayout(self.labelLayout)
         self.windowLayout.addWidget(self.newGraph)
@@ -94,11 +103,11 @@ class Example(QWidget):
         return button
 
     def sendCmdLine(self):
-         self.sendCommand(self.commandLine.text())
+        self.sendCommand(self.commandLine.text())
 
     def sendCommand(self, fullCmd):
         import opscore.actor.keyvar as keyvar
-        [actor, cmdStr] =fullCmd.split(' ', 1)
+        [actor, cmdStr] = fullCmd.split(' ', 1)
         self.logArea.newLine('cmdIn=%s %s' % (actor, cmdStr))
         self.actor.cmdr.bgCall(**dict(actor=actor,
                                       cmdStr=cmdStr,
@@ -108,5 +117,5 @@ class Example(QWidget):
 
     def returnFunc(self, cmdVar):
         self.logArea.newLine('cmdOut=%s' % cmdVar.replyList[0].canonical())
-        for i in range(len(cmdVar.replyList)-1):
-            self.logArea.newLine(cmdVar.replyList[i+1].canonical())
+        for i in range(len(cmdVar.replyList) - 1):
+            self.logArea.newLine(cmdVar.replyList[i + 1].canonical())

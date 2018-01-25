@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import matplotlib
+import numpy as np
 
 # Make sure that we are using QT5
 matplotlib.use('Qt5Agg')
@@ -14,16 +15,18 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import rcParams
 
 rcParams.update({'figure.autolayout': True})
+
+
 # plt.style.use('ggplot')
 
 
 class Graph(FigureCanvas):
     """Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
 
-    def __init__(self, parent=None, label='', width=5, height=4, dpi=100):
+    def __init__(self, parent=None, labels=[], width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
-        self.label = label
-
+        self.labels = labels
+        self.plotActivated = [False for label in labels]
         self.axes = fig.add_subplot(111)
 
         self.dates = []
@@ -42,25 +45,29 @@ class Graph(FigureCanvas):
         self.axes.plot(*args, **kwargs)
         self.axes.grid()
 
-        #plt.subplots_adjust(left=0.05, bottom=0.05, right=0.95, top=0.95, wspace=0.2, hspace=0.2)
         self.draw()
-        self.axes.set_position([0.2, 0.2, 0.6, 0.6]) #
+        self.axes.set_position([0.2, 0.2, 0.6, 0.6])  #
 
     def plot_date(self):
+        vals = np.array(self.vals)
         self.axes.cla()
-        self.axes.plot_date(self.dates, self.vals, 'o-', label=self.label, markersize=4)
+
+        for i in range(len(self.labels)):
+            if self.plotActivated[i]:
+                self.axes.plot_date(self.dates, vals[:, i], 'o-', label=self.labels[i], markersize=4)
         self.arangeDate()
         self.axes.grid()
         self.axes.legend()
         self.draw()
 
-    def newValue(self, ind, keyvar):
+    def newValue(self, keyvar):
         values = keyvar.getValue(doRaise=False)
         timestamp = epoch2num(keyvar.timestamp)
-        value = (values,) if not isinstance(values, tuple) else values[ind]
 
-        if value is not None:
-            self.vals.append(value)
+        values = [value if value is not None else np.nan for value in values]
+
+        if values is not None:
+            self.vals.append(values)
             self.dates.append(timestamp)
             self.dates = self.dates[-100:]
             self.vals = self.vals[-100:]
@@ -78,4 +85,3 @@ class Graph(FigureCanvas):
 
         self.axes.xaxis.set_major_formatter(DateFormatter(fmtDate))
         plt.setp(self.axes.xaxis.get_majorticklabels(), rotation=45, horizontalalignment='right')
-

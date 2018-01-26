@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QGridLayout, QWidget, QGroupBox, QLineEdit, QPushBut
 from PyQt5.QtGui import QFont, QTextCursor
 
 from widgets import ValueGB
-from graph import Graph
+from graph import Graph, Curve
 
 
 class LogArea(QPlainTextEdit):
@@ -81,14 +81,36 @@ class Example(QWidget):
         self.labelLayout.addWidget(self.createButton(title='POWER ON', cmdStr='mcs power on'), 5, 0, 1, 1)
         self.labelLayout.addWidget(self.createButton(title='POWER OFF', cmdStr='mcs power off'), 5, 1, 1, 1)
 
-        self.newGraph = Graph(parent=self, labels=['Cooler_Setpoint', 'Cooler_Reject', 'Cooler_Tip', 'Cooler_Power'])
-        self.newGraph.plotActivated[0] = True
-        self.newGraph.plotActivated[2] = True
 
-        self.actor.models['xcu_r0'].keyVarDict["coolerTemps"].addCallback(partial(self.newGraph.newValue))
+
+        self.tempGraph = Graph(parent=self)
+
+        self.actor.models['xcu_r0'].keyVarDict["coolerTemps"].addCallback(partial(self.tempGraph.newValue))
+        self.actor.models['xcu_r0'].keyVarDict["temps"].addCallback(partial(self.tempGraph.newValue))
+
+        self.tempGraph.addCurve(actor='xcu_r0', keyword="coolerTemps", index=0, label='Cooler_Setpoint', axe=0, ylabel='Temperature(K)')
+        self.tempGraph.addCurve(actor='xcu_r0', keyword="coolerTemps", index=2, label='Cooler_Tip', axe=0)
+        self.tempGraph.addCurve(actor='xcu_r0', keyword="coolerTemps", index=3, label='Cooler_Power', axe=1, ylabel='Power(W)')
+        #
+        self.tempGraph.addCurve(actor='xcu_r0', keyword="temps", index=0, label='Detector_Box', axe=0)
+        self.tempGraph.addCurve(actor='xcu_r0', keyword="temps", index=3, label='Thermal_Spreader', axe=0)
+
+
+        self.pressureGraph = Graph(parent=self)
+
+        self.actor.models['xcu_r0'].keyVarDict["pressure"].addCallback(partial(self.pressureGraph.newValue))
+        self.actor.models['xcu_r0'].keyVarDict["ionpump1"].addCallback(partial(self.pressureGraph.newValue))
+        self.actor.models['xcu_r0'].keyVarDict["ionpump2"].addCallback(partial(self.pressureGraph.newValue))
+
+        self.pressureGraph.addCurve(actor='xcu_r0', keyword="pressure", index=0, label='Ion_Gauge', axe=0, ylabel='Pressure(Torr)', logy=True)
+        self.pressureGraph.addCurve(actor='xcu_r0', keyword="ionpump1", index=4, label='Ionpump1', axe=0)
+        self.pressureGraph.addCurve(actor='xcu_r0', keyword="ionpump2", index=4, label='Ionpump2', axe=0)
+
 
         self.windowLayout.addLayout(self.labelLayout)
-        self.windowLayout.addWidget(self.newGraph)
+        self.windowLayout.addWidget(self.tempGraph)
+        self.windowLayout.addWidget(self.pressureGraph)
+
         self.mainLayout.addLayout(self.windowLayout)
         self.mainLayout.addWidget(self.logArea)
         self.setLayout(self.mainLayout)
